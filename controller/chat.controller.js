@@ -8,9 +8,12 @@ class ChatController {
         return await chatService.getChatMessage(sender,receiver);
     }
 
-    async sendChatMessage(sender,receiver,content) {
-        logger.info('Controller: sendChatMessage', sender);
-        return await chatService.sendChatMessage(sender,receiver,content);
+    async handleMessage(socket){
+        socket.on('newMessage',(sender,receiver,content)=>{
+            chatService.sendChatMessage(sender,receiver,content).then(()=>{
+                socket.to(receiver).emit('newMessage',sender,receiver,content);
+            })
+        })
     }
 
     async updateChatMessage(chat) {

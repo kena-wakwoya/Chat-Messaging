@@ -1,60 +1,34 @@
 const express = require('express');
-const http = require('http');
-const socketIO = require('socket.io');
 const mongoose = require('mongoose');
 require('dotenv').config()
 const app = express();
-const server = http.createServer(app);
-const io = socketIO(server);
+const server = require('http').Server(app);
 const port = process.env.PORT || 3000;
-
-
-
-// Import and use the chat router
+const io = require('socket.io')(server);
+// Import and use the chat router and controllers
+const chatController = require('./controller/chat.controller');
 const chatRouter = require('./routes/chat.router');
 
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('User connected:', socket.id);
 
-  // Send all existing messages to the connected client
-  Message.find()
-    .sort({ createdAt: 1 })
-    .then((messages) => {
-      socket.emit('messages', messages);
-    })
-    .catch((error) => {
-      console.error('Failed to fetch messages:', error);
-    });
+  chatController.handleMessage(socket);
 
-  // Handle incoming messages from clients
-  socket.on('sendMessage', (data) => {
-    const { sender, content } = data;
-
-    // Create a new message
-    const message = new Message({
-      sender,
-      content,
-    });
-
-    // Save the message to MongoDB
-    message.save()
-      .then(() => {
-        // Broadcast the message to all connected clients
-        io.emit('message', message);
-      })
-      .catch((error) => {
-        console.error('Failed to save message:', error);
-      });
+  socket.on('joinRoom', (room) => {
+    console.log('User joined room:', room);
+    socket.join(room);
   });
 
-  // Handle disconnection
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+    console.log('User disconnected:', socket.id);
   });
 });
+
+
+
 // Mount the chat router
-app.use('/chat', chatRouter);
+app.use('/api/messages', chatRouter);
 
 
 

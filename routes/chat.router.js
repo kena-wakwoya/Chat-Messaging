@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
 router.post('/',(req, res) => {
    console.log("body", req.body);
    const {sender,reciever,content} = req.body;
-   chatController.sendChatMessage(sender,reciever,content).then(data => res.json(data));
+   chatController.handleMessage(sender,reciever,content).then(data => res.json(data));
 });
 
 // Route: Update a profile
